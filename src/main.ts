@@ -100,6 +100,7 @@ declare const __CONVEX_URL__: string;
       stop: () => widget.stop(),
       next: () => widget.next(),
       prev: () => widget.prev(),
+      goTo: (index: number) => widget.goTo(index),
     };
   } catch (error) {
     console.error('WalkmanJS: Error initializing widget', error);

@@ -14,13 +14,20 @@ interface TooltipOptions {
 export function createTooltip(options: TooltipOptions): HTMLElement {
   const tooltip = document.createElement('div');
   tooltip.className = 'wjs-tooltip';
+  tooltip.setAttribute('role', 'dialog');
+  tooltip.setAttribute('aria-modal', 'true');
+  tooltip.setAttribute('aria-labelledby', 'wjs-tooltip-title');
   tooltip.innerHTML = getTooltipHTML(options);
   document.body.appendChild(tooltip);
 
   attachEventListeners(tooltip, options);
 
+  // Focus the tooltip for keyboard accessibility
+  tooltip.setAttribute('tabindex', '-1');
+  
   requestAnimationFrame(() => {
     tooltip.classList.add('wjs-tooltip--visible');
+    tooltip.focus();
   });
 
   return tooltip;
@@ -51,25 +58,43 @@ function getTooltipHTML(options: TooltipOptions): string {
   const isFirst = currentIndex === 0;
   const isLast = currentIndex === totalSteps - 1;
 
+  // Generate progress dots
+  const progressDots = Array.from({ length: totalSteps }, (_, i) => {
+    let className = 'wjs-tooltip__progress-dot';
+    if (i === currentIndex) {
+      className += ' wjs-tooltip__progress-dot--active';
+    } else if (i < currentIndex) {
+      className += ' wjs-tooltip__progress-dot--completed';
+    }
+    return `<span class="${className}" aria-hidden="true"></span>`;
+  }).join('');
+
   return `
-    <button class="wjs-tooltip__close" aria-label="Close">
-      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <button class="wjs-tooltip__close" aria-label="Close tour (Escape)">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
         <path d="M1 1L13 13M1 13L13 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
     </button>
     <div class="wjs-tooltip__content">
-      <h4 class="wjs-tooltip__title">${escapeHTML(step.title)}</h4>
+      <h4 class="wjs-tooltip__title" id="wjs-tooltip-title">${escapeHTML(step.title)}</h4>
       <p class="wjs-tooltip__text">${escapeHTML(step.content)}</p>
     </div>
     <div class="wjs-tooltip__footer">
-      <span class="wjs-tooltip__progress">Step ${currentIndex + 1} of ${totalSteps}</span>
+      <div class="wjs-tooltip__progress" aria-label="Step ${currentIndex + 1} of ${totalSteps}">
+        ${progressDots}
+      </div>
       <div class="wjs-tooltip__actions">
-        <button class="wjs-tooltip__btn wjs-tooltip__btn--skip">Skip</button>
-        ${!isFirst ? '<button class="wjs-tooltip__btn wjs-tooltip__btn--prev">Back</button>' : ''}
-        <button class="wjs-tooltip__btn wjs-tooltip__btn--next">
+        <button class="wjs-tooltip__btn wjs-tooltip__btn--skip" aria-label="Skip this step">
+          Skip
+        </button>
+        ${!isFirst ? '<button class="wjs-tooltip__btn wjs-tooltip__btn--prev" aria-label="Go to previous step">Back</button>' : ''}
+        <button class="wjs-tooltip__btn wjs-tooltip__btn--next" aria-label="${isLast ? 'Finish tour' : 'Go to next step'}">
           ${isLast ? 'Finish' : 'Next'}
         </button>
       </div>
+    </div>
+    <div class="wjs-tooltip__kbd-hint">
+      <span class="wjs-tooltip__kbd">←</span> <span class="wjs-tooltip__kbd">→</span> to navigate · <span class="wjs-tooltip__kbd">Esc</span> to close
     </div>
   `;
 }
@@ -91,4 +116,3 @@ function escapeHTML(str: string): string {
   div.textContent = str;
   return div.innerHTML;
 }
-

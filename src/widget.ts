@@ -1,6 +1,6 @@
 import { computePosition, flip, shift, offset, autoUpdate, arrow } from '@floating-ui/dom';
 import { createTooltip, updateTooltip, removeTooltip } from './ui/tooltip';
-import { createOverlay, removeOverlay, highlightElement } from './ui/overlay';
+import { createOverlay, removeOverlay, highlightElement, cleanupHighlight } from './ui/overlay';
 import { injectStyles } from './ui/styles';
 import type { Tour, Step, WidgetOptions, Theme } from './types';
 
@@ -13,6 +13,8 @@ export class WalkmanWidget {
   private overlayEl: HTMLElement | null = null;
   private arrowEl: HTMLElement | null = null;
   private cleanupAutoUpdate: (() => void) | null = null;
+  private currentTargetEl: HTMLElement | null = null;
+  private keyboardHandler: ((e: KeyboardEvent) => void) | null = null;
 
   private onStart?: () => void;
   private onStepView?: (stepId: string) => void;
@@ -50,6 +52,7 @@ export class WalkmanWidget {
     this.isActive = true;
     this.currentIndex = 0;
     this.onStart?.();
+    this.setupKeyboardNavigation();
     this.showStep();
   }
 
@@ -94,15 +97,68 @@ export class WalkmanWidget {
     }
   }
 
+  goTo(index: number): void {
+    if (!this.isActive || index < 0 || index >= this.steps.length) return;
+    this.currentIndex = index;
+    this.showStep();
+  }
+
   private complete(): void {
     this.isActive = false;
     this.cleanup();
     this.onComplete?.();
   }
 
+  private setupKeyboardNavigation(): void {
+    this.keyboardHandler = (e: KeyboardEvent) => {
+      if (!this.isActive) return;
+
+      switch (e.key) {
+        case 'Escape':
+          e.preventDefault();
+          this.stop();
+          break;
+        case 'ArrowRight':
+        case 'Enter':
+          e.preventDefault();
+          this.next();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          this.prev();
+          break;
+        case 'Tab':
+          // Keep focus within the tooltip
+          if (this.tooltipEl) {
+            const focusableElements = this.tooltipEl.querySelectorAll<HTMLElement>(
+              'button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            );
+            const firstEl = focusableElements[0];
+            const lastEl = focusableElements[focusableElements.length - 1];
+
+            if (e.shiftKey && document.activeElement === firstEl) {
+              e.preventDefault();
+              lastEl?.focus();
+            } else if (!e.shiftKey && document.activeElement === lastEl) {
+              e.preventDefault();
+              firstEl?.focus();
+            }
+          }
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', this.keyboardHandler);
+  }
+
   private showStep(): void {
     const step = this.steps[this.currentIndex];
     const targetEl = document.querySelector(step.targetSelector) as HTMLElement | null;
+
+    // Cleanup previous target highlight
+    if (this.currentTargetEl && this.currentTargetEl !== targetEl) {
+      cleanupHighlight(this.currentTargetEl);
+    }
 
     if (!targetEl) {
       console.warn(`WalkmanJS: Target element not found: ${step.targetSelector}`);
@@ -115,44 +171,53 @@ export class WalkmanWidget {
       return;
     }
 
+    this.currentTargetEl = targetEl;
     this.onStepView?.(step.stepId);
 
-    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Smooth scroll element into view
+    targetEl.scrollIntoView({ 
+      behavior: 'smooth', 
+      block: 'center',
+      inline: 'center'
+    });
 
-    const theme = this.getTheme();
+    // Wait for scroll to complete before positioning
+    setTimeout(() => {
+      const theme = this.getTheme();
 
-    if (theme.overlayEnabled) {
-      if (!this.overlayEl) {
-        this.overlayEl = createOverlay(theme.overlayOpacity);
+      if (theme.overlayEnabled) {
+        if (!this.overlayEl) {
+          this.overlayEl = createOverlay(theme.overlayOpacity);
+        }
+        highlightElement(targetEl);
       }
-      highlightElement(targetEl);
-    }
 
-    if (!this.tooltipEl) {
-      this.tooltipEl = createTooltip({
-        step,
-        currentIndex: this.currentIndex,
-        totalSteps: this.steps.length,
-        theme,
-        onNext: () => this.next(),
-        onPrev: () => this.prev(),
-        onSkip: () => this.skip(),
-        onClose: () => this.stop(),
-      });
-    } else {
-      updateTooltip(this.tooltipEl, {
-        step,
-        currentIndex: this.currentIndex,
-        totalSteps: this.steps.length,
-        theme,
-        onNext: () => this.next(),
-        onPrev: () => this.prev(),
-        onSkip: () => this.skip(),
-        onClose: () => this.stop(),
-      });
-    }
+      if (!this.tooltipEl) {
+        this.tooltipEl = createTooltip({
+          step,
+          currentIndex: this.currentIndex,
+          totalSteps: this.steps.length,
+          theme,
+          onNext: () => this.next(),
+          onPrev: () => this.prev(),
+          onSkip: () => this.skip(),
+          onClose: () => this.stop(),
+        });
+      } else {
+        updateTooltip(this.tooltipEl, {
+          step,
+          currentIndex: this.currentIndex,
+          totalSteps: this.steps.length,
+          theme,
+          onNext: () => this.next(),
+          onPrev: () => this.prev(),
+          onSkip: () => this.skip(),
+          onClose: () => this.stop(),
+        });
+      }
 
-    this.positionTooltip(targetEl, step.position);
+      this.positionTooltip(targetEl, step.position);
+    }, 300);
   }
 
   private positionTooltip(
@@ -180,24 +245,17 @@ export class WalkmanWidget {
       const { x, y, placement, middlewareData } = await computePosition(targetEl, this.tooltipEl, {
         placement: position,
         middleware: [
-          offset(12),
+          offset(16),
           flip({
             fallbackAxisSideDirection: 'start',
-            crossAxis: false,
-            padding: 16,
+            fallbackPlacements: ['top', 'bottom', 'left', 'right'],
+            padding: 20,
           }),
           shift({ 
-            padding: 16,
+            padding: 20,
             crossAxis: true,
-            limiter: {
-              fn: (state) => {
-                // Ensure tooltip stays fully within viewport
-                return state;
-              },
-              options: {}
-            }
           }),
-          arrow({ element: this.arrowEl, padding: 8 }),
+          arrow({ element: this.arrowEl, padding: 12 }),
         ],
       });
 
@@ -222,7 +280,7 @@ export class WalkmanWidget {
         top: arrowY != null ? `${arrowY}px` : '',
         right: '',
         bottom: '',
-        [staticSide]: '-6px',
+        [staticSide]: '-7px',
       });
 
       // Update arrow rotation based on placement
@@ -242,11 +300,24 @@ export class WalkmanWidget {
   }
 
   private cleanup(): void {
+    // Remove keyboard listener
+    if (this.keyboardHandler) {
+      document.removeEventListener('keydown', this.keyboardHandler);
+      this.keyboardHandler = null;
+    }
+
     // Cleanup auto-update listener
     if (this.cleanupAutoUpdate) {
       this.cleanupAutoUpdate();
       this.cleanupAutoUpdate = null;
     }
+
+    // Cleanup current target highlight
+    if (this.currentTargetEl) {
+      cleanupHighlight(this.currentTargetEl);
+      this.currentTargetEl = null;
+    }
+
     if (this.tooltipEl) {
       removeTooltip(this.tooltipEl);
       this.tooltipEl = null;
@@ -258,4 +329,3 @@ export class WalkmanWidget {
     this.arrowEl = null;
   }
 }
-

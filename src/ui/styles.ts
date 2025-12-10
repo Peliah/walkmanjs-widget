@@ -47,6 +47,31 @@ export function injectStyles(theme: Theme): void {
       transform: translateY(0);
     }
 
+    .wjs-tooltip__arrow {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background-color: ${theme.backgroundColor};
+      transform: rotate(45deg);
+      box-shadow: -1px -1px 1px rgba(0, 0, 0, 0.05);
+    }
+
+    .wjs-tooltip__arrow[data-placement^="top"] {
+      box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.05);
+    }
+
+    .wjs-tooltip__arrow[data-placement^="bottom"] {
+      box-shadow: -1px -1px 1px rgba(0, 0, 0, 0.05);
+    }
+
+    .wjs-tooltip__arrow[data-placement^="left"] {
+      box-shadow: 1px -1px 1px rgba(0, 0, 0, 0.05);
+    }
+
+    .wjs-tooltip__arrow[data-placement^="right"] {
+      box-shadow: -1px 1px 1px rgba(0, 0, 0, 0.05);
+    }
+
     .wjs-tooltip__close {
       position: absolute;
       top: 12px;

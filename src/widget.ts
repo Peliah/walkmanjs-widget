@@ -1,4 +1,4 @@
-import { computePosition, flip, shift, offset } from '@floating-ui/dom';
+import { computePosition, flip, shift, offset, autoUpdate, arrow } from '@floating-ui/dom';
 import { createTooltip, updateTooltip, removeTooltip } from './ui/tooltip';
 import { createOverlay, removeOverlay, highlightElement } from './ui/overlay';
 import { injectStyles } from './ui/styles';
@@ -11,6 +11,8 @@ export class WalkmanWidget {
   private isActive: boolean = false;
   private tooltipEl: HTMLElement | null = null;
   private overlayEl: HTMLElement | null = null;
+  private arrowEl: HTMLElement | null = null;
+  private cleanupAutoUpdate: (() => void) | null = null;
 
   private onStart?: () => void;
   private onStepView?: (stepId: string) => void;
@@ -153,26 +155,98 @@ export class WalkmanWidget {
     this.positionTooltip(targetEl, step.position);
   }
 
-  private async positionTooltip(
+  private positionTooltip(
     targetEl: HTMLElement,
     position: 'top' | 'bottom' | 'left' | 'right'
-  ): Promise<void> {
+  ): void {
     if (!this.tooltipEl) return;
 
-    const placement = position;
+    // Cleanup previous auto-update listener
+    if (this.cleanupAutoUpdate) {
+      this.cleanupAutoUpdate();
+      this.cleanupAutoUpdate = null;
+    }
 
-    const { x, y } = await computePosition(targetEl, this.tooltipEl, {
-      placement,
-      middleware: [offset(12), flip(), shift({ padding: 8 })],
-    });
+    // Create arrow element if it doesn't exist
+    if (!this.arrowEl) {
+      this.arrowEl = document.createElement('div');
+      this.arrowEl.className = 'wjs-tooltip__arrow';
+      this.tooltipEl.appendChild(this.arrowEl);
+    }
 
-    Object.assign(this.tooltipEl.style, {
-      left: `${x}px`,
-      top: `${y}px`,
+    const updatePosition = async () => {
+      if (!this.tooltipEl || !this.arrowEl) return;
+
+      const { x, y, placement, middlewareData } = await computePosition(targetEl, this.tooltipEl, {
+        placement: position,
+        middleware: [
+          offset(12),
+          flip({
+            fallbackAxisSideDirection: 'start',
+            crossAxis: false,
+            padding: 16,
+          }),
+          shift({ 
+            padding: 16,
+            crossAxis: true,
+            limiter: {
+              fn: (state) => {
+                // Ensure tooltip stays fully within viewport
+                return state;
+              },
+              options: {}
+            }
+          }),
+          arrow({ element: this.arrowEl, padding: 8 }),
+        ],
+      });
+
+      // Apply tooltip position
+      Object.assign(this.tooltipEl.style, {
+        left: `${x}px`,
+        top: `${y}px`,
+      });
+
+      // Position the arrow
+      const arrowX = middlewareData.arrow?.x;
+      const arrowY = middlewareData.arrow?.y;
+      const staticSide = {
+        top: 'bottom',
+        right: 'left',
+        bottom: 'top',
+        left: 'right',
+      }[placement.split('-')[0]] as string;
+
+      Object.assign(this.arrowEl.style, {
+        left: arrowX != null ? `${arrowX}px` : '',
+        top: arrowY != null ? `${arrowY}px` : '',
+        right: '',
+        bottom: '',
+        [staticSide]: '-6px',
+      });
+
+      // Update arrow rotation based on placement
+      this.arrowEl.dataset.placement = placement;
+    };
+
+    // Initial position update
+    updatePosition();
+
+    // Auto-update position on scroll, resize, or layout changes
+    this.cleanupAutoUpdate = autoUpdate(targetEl, this.tooltipEl, updatePosition, {
+      ancestorScroll: true,
+      ancestorResize: true,
+      elementResize: true,
+      layoutShift: true,
     });
   }
 
   private cleanup(): void {
+    // Cleanup auto-update listener
+    if (this.cleanupAutoUpdate) {
+      this.cleanupAutoUpdate();
+      this.cleanupAutoUpdate = null;
+    }
     if (this.tooltipEl) {
       removeTooltip(this.tooltipEl);
       this.tooltipEl = null;
@@ -181,6 +255,7 @@ export class WalkmanWidget {
       removeOverlay(this.overlayEl);
       this.overlayEl = null;
     }
+    this.arrowEl = null;
   }
 }
 

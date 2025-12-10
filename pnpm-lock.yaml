@@ -7,10 +7,11 @@ settings:
 importers:
 
   .:
+    dependencies:
+      shepherd.js:
+        specifier: ^13.0.3
+        version: 13.0.3
     devDependencies:
-      '@floating-ui/dom':
-        specifier: ^1.7.4
-        version: 1.7.4
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -295,8 +296,15 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@scarf/scarf@1.4.0':
+    resolution: {integrity: sha512-xxeapPiUXdZAE3che6f3xogoJPeZgig6omHEy1rIY5WVsB3H2BHNnZH+gHG6x91SCWyQCzWGsuL2Hh3ClO5/qQ==}
+
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
+
+  deepmerge-ts@5.1.0:
+    resolution: {integrity: sha512-eS8dRJOckyo9maw9Tu5O5RUi/4inFLrnoLkBe3cPfDMx3WZioXtmOew4TXQaxq7Rhl4xjDtR7c6x8nNTxOvbFw==}
+    engines: {node: '>=16.0.0'}
 
   esbuild@0.25.12:
     resolution: {integrity: sha512-bbPBYYrtZbkt6Os6FiTLCTFxvq4tt3JKall1vRwshA3fdVztsLAatFaZobhkBC8/BrPetoa0oksYoKXoG4ryJg==}
@@ -337,6 +345,10 @@ packages:
     resolution: {integrity: sha512-w8GmOxZfBmKknvdXU1sdM9NHcoQejwF/4mNgj2JuEEdRaHwwF12K7e9eXn1nLZ07ad+du76mkVsyeb2rKGllsA==}
     engines: {node: '>=18.0.0', npm: '>=8.0.0'}
     hasBin: true
+
+  shepherd.js@13.0.3:
+    resolution: {integrity: sha512-1lQtQUNQYi+8k9BAmbUZh7D2QxFfkxiWKU0XFTbzYaIrCkB4nR0DLQuarH5G7Ym6L8wfbadxP3hJhZ2HzVktaA==}
+    engines: {node: 18.* || >= 20}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -548,7 +560,11 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.53.3':
     optional: true
 
+  '@scarf/scarf@1.4.0': {}
+
   '@types/estree@1.0.8': {}
+
+  deepmerge-ts@5.1.0: {}
 
   esbuild@0.25.12:
     optionalDependencies:
@@ -625,6 +641,12 @@ snapshots:
       '@rollup/rollup-win32-x64-gnu': 4.53.3
       '@rollup/rollup-win32-x64-msvc': 4.53.3
       fsevents: 2.3.3
+
+  shepherd.js@13.0.3:
+    dependencies:
+      '@floating-ui/dom': 1.7.4
+      '@scarf/scarf': 1.4.0
+      deepmerge-ts: 5.1.0
 
   source-map-js@1.2.1: {}
 

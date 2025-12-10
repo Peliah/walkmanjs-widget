@@ -76,7 +76,7 @@ declare const __CONVEX_URL__: string;
       }
     };
 
-    // Create widget
+    // Create widget (now powered by Shepherd.js)
     const widget = new WalkmanWidget({
       tour,
       steps: sortedSteps,
@@ -101,7 +101,11 @@ declare const __CONVEX_URL__: string;
       next: () => widget.next(),
       prev: () => widget.prev(),
       goTo: (index: number) => widget.goTo(index),
+      isActive: () => widget.isActive(),
+      getCurrentStep: () => widget.getCurrentStep(),
     };
+
+    console.log('WalkmanJS: Widget initialized (powered by Shepherd.js)');
   } catch (error) {
     console.error('WalkmanJS: Error initializing widget', error);
   }

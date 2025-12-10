@@ -1,0 +1,21 @@
+{
+  "name": "walkmanjs-widget",
+  "version": "1.0.0",
+  "description": "Embeddable onboarding tour widget for WalkmanJS",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["onboarding", "tour", "widget", "embeddable"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@floating-ui/dom": "^1.7.4",
+    "typescript": "^5.9.3",
+    "vite": "^7.2.7"
+  },
+  "dependencies": {
+  }
+}

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WalkmanJS Widget Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f5f5f5;
+      min-height: 100vh;
+      padding: 40px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #0B192C;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .card h2 {
+      color: #1E3E62;
+      margin-bottom: 12px;
+    }
+    .card p {
+      color: #666;
+      line-height: 1.6;
+    }
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background-color: #FF6500;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 16px;
+    }
+    .btn:hover {
+      background-color: #e65c00;
+    }
+    nav {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 32px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    nav a {
+      color: #1E3E62;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      transition: background-color 0.15s;
+    }
+    nav a:hover {
+      background-color: #1E3E6210;
+    }
+    #signup-btn {
+      background-color: #FF6500;
+      margin-left: auto;
+    }
+    .feature-list {
+      margin-top: 16px;
+      list-style: none;
+    }
+    .feature-list li {
+      padding: 8px 0;
+      color: #444;
+    }
+    .demo-controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #0B192C;
+      padding: 16px;
+      border-radius: 12px;
+      display: flex;
+      gap: 8px;
+      z-index: 99997;
+    }
+    .demo-controls button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .demo-controls button.start {
+      background: #FF6500;
+      color: white;
+    }
+    .demo-controls button.stop {
+      background: #1E3E62;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav id="main-nav">
+      <a href="#">Home</a>
+      <a href="#">Features</a>
+      <a href="#">Pricing</a>
+      <a href="#">Docs</a>
+      <button id="signup-btn" class="btn">Sign Up</button>
+    </nav>
+
+    <h1 id="welcome-title">Welcome to Our Platform</h1>
+
+    <div class="card" id="feature-card">
+      <h2>Powerful Features</h2>
+      <p>Discover all the amazing things you can do with our platform.</p>
+      <ul class="feature-list">
+        <li>✓ Easy to use interface</li>
+        <li>✓ Real-time collaboration</li>
+        <li>✓ Advanced analytics</li>
+        <li>✓ 24/7 Support</li>
+      </ul>
+    </div>
+
+    <div class="card" id="cta-card">
+      <h2>Ready to Get Started?</h2>
+      <p>Join thousands of users who are already using our platform.</p>
+      <button id="get-started-btn" class="btn">Get Started Free</button>
+    </div>
+
+    <div class="card" id="help-card">
+      <h2>Need Help?</h2>
+      <p>Check out our documentation or contact support.</p>
+      <button id="docs-btn" class="btn" style="background-color: #1E3E62;">View Docs</button>
+    </div>
+  </div>
+
+  <!-- Demo Controls -->
+  <div class="demo-controls">
+    <button class="start" onclick="window.WalkmanJS?.start()">Start Tour</button>
+    <button class="stop" onclick="window.WalkmanJS?.stop()">Stop Tour</button>
+  </div>
+
+  <!-- Test Data -->
+  <script>
+    window.WalkmanJSTest = {
+      tour: {
+        _id: 'test_tour',
+        name: 'Welcome Tour',
+        status: 'active',
+        theme: {
+          primaryColor: '#FF6500',
+          backgroundColor: '#FFFFFF',
+          textColor: '#0B192C',
+          borderRadius: 8,
+          overlayEnabled: true,
+          overlayOpacity: 0.5,
+        },
+        targeting: {
+          urlMatchType: 'contains',
+          urlPattern: '',
+          triggerType: 'pageload',
+          frequency: 'always',
+        },
+      },
+      steps: [
+        {
+          _id: 'step_1',
+          tourId: 'test_tour',
+          stepId: 'welcome',
+          title: 'Welcome! 👋',
+          content: 'Welcome to our platform. Let us give you a quick tour of the key features!',
+          targetSelector: '#welcome-title',
+          position: 'bottom',
+          order: 0,
+        },
+        {
+          _id: 'step_2',
+          tourId: 'test_tour',
+          stepId: 'navigation',
+          title: 'Navigation Menu',
+          content: 'Use this menu to navigate between different sections of the app.',
+          targetSelector: '#main-nav',
+          position: 'bottom',
+          order: 1,
+        },
+        {
+          _id: 'step_3',
+          tourId: 'test_tour',
+          stepId: 'signup',
+          title: 'Create Account',
+          content: 'Click here to create your free account and get started.',
+          targetSelector: '#signup-btn',
+          position: 'bottom',
+          order: 2,
+        },
+        {
+          _id: 'step_4',
+          tourId: 'test_tour',
+          stepId: 'features',
+          title: 'Powerful Features',
+          content: 'Explore all the amazing features we offer to help you succeed.',
+          targetSelector: '#feature-card',
+          position: 'right',
+          order: 3,
+        },
+        {
+          _id: 'step_5',
+          tourId: 'test_tour',
+          stepId: 'cta',
+          title: 'Get Started',
+          content: 'Ready to begin? Click this button to start your free trial!',
+          targetSelector: '#get-started-btn',
+          position: 'top',
+          order: 4,
+        },
+      ],
+    };
+  </script>
+
+  <!-- WalkmanJS Demo Widget -->
+  <script type="module" src="/src/demo.ts"></script>
+</body>
+</html>
